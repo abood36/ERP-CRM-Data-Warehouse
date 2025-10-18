@@ -1,6 +1,8 @@
 # ERP-CRM-Data-Warehouse
   A complete Data Engineering pipeline built using SQL Server and Python, designed to collect, process, and analyze large-scale datasets efficiently.
 
+  The goal of this project is to showcase strong data engineering practices — from data ingestion and transformation to storage optimization and analytics-ready data modeling.
+
 
 ## 🧠 Project Overview
   This project demonstrates a complete Data Engineering pipeline built using SQL Server and Python, designed to collect, process, and analyze large-scale datasets efficiently.
