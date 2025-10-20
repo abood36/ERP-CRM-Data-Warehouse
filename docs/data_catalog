@@ -1,0 +1,118 @@
+🗂️ DATA CATALOG — GOLD LAYER
+  
+📘 Overview
+The Gold Layer in the data warehouse represents the final analytical layer, containing curated, business-ready data models designed for reporting and analytics.
+It includes dimension views and fact views derived from the Silver Layer, structured according to the Star Schema model.
+
+  
+⭐ DIMENSIONS
+  
+🧩 gold.dim_customers
+Description:
+Customer dimension containing enriched customer information integrated from CRM and ERP sources.
+
+Source Tables:
+silver.crm_cust_info
+silver.erp_cust_az12
+silver.erp_loc_a101
+
+Primary Key:
+customer_key (Surrogate key generated using ROW_NUMBER())
+
+Columns:
+
+Column Name	Data Type	Description
+customer_key	INT (Generated)	Surrogate key for the dimension (unique row number).
+customer_id	NVARCHAR	Original customer identifier from CRM.
+customer_number	NVARCHAR	External or business customer number.
+first_name	NVARCHAR	Customer’s first name.
+last_name	NVARCHAR	Customer’s last name.
+country	NVARCHAR	Country from ERP location data.
+marital_status	NVARCHAR	Marital status of the customer.
+gender	NVARCHAR	Gender, prioritized from CRM (cst_gndr), falls back to ERP (gen) if missing.
+birthdate	DATE	Date of birth (from ERP).
+create_date	DATETIME	Date when the customer was created in CRM.
+
+Notes:
+Primary gender source: CRM (cst_gndr)
+Fallback gender: ERP (ca.gen)
+Combines customer, location, and demographic data into one enriched view.
+
+  
+📦 gold.dim_products
+Description:
+Product dimension with detailed product information, categories, and attributes integrated from CRM and ERP sources.
+
+Source Tables:
+silver.crm_prd_info
+silver.erp_px_cat_g1v2
+  
+Primary Key:
+product_key (Surrogate key generated using ROW_NUMBER())
+
+Columns:
+
+Column Name	Data Type	Description
+product_key	INT (Generated)	Surrogate key for the product dimension.
+product_id	NVARCHAR	Product ID from CRM.
+product_number	NVARCHAR	Product reference key.
+product_name	NVARCHAR	Product descriptive name.
+category_id	NVARCHAR	Product category ID.
+category	NVARCHAR	Product category name.
+subcategory	NVARCHAR	Product subcategory.
+maintenance	NVARCHAR	Indicates maintenance or support level (from ERP).
+cost	DECIMAL	Product cost.
+product_line	NVARCHAR	Product line grouping.
+start_date	DATE	Start/launch date for the product.
+
+Notes:
+Filters out historical products where prd_end_dt is not null.
+Joins product info with category metadata from ERP.
+
+  
+💰 FACTS
+  
+📈 gold.fact_sales
+Description:
+Sales fact table containing transactional sales data linked to customer and product dimensions.
+
+Source Tables:
+silver.crm_sales_details
+gold.dim_products
+gold.dim_customers
+
+Grain:
+Each row represents a sales order line item.
+
+Columns:
+
+Column Name	Data Type	Description
+order_number	NVARCHAR	Unique sales order number.
+product_key	INT (FK)	Foreign key reference to gold.dim_products.product_key.
+customer_key	INT (FK)	Foreign key reference to gold.dim_customers.customer_key.
+order_date	DATE	Sales order creation date.
+shipping_date	DATE	Date the order was shipped.
+due_date	DATE	Expected due date for delivery/payment.
+sales_amount	DECIMAL	Total sales amount.
+quantity	INT	Quantity sold.
+price	DECIMAL	Unit price at time of sale.
+
+Notes:
+Follows Star Schema design (Fact table linked to Dimension tables).
+Data enriched by surrogate keys (customer_key, product_key).
+Useful for metrics such as revenue, quantity sold, and product performance.
+
+  
+🏗️ STAR SCHEMA STRUCTURE
+          gold.dim_products
+                 │
+                 │
+         ┌───────┼────────┐
+         │       │        │
+         ▼       ▼        ▼
+ gold.dim_customers   gold.fact_sales
+
+
+Relationships:
+gold.fact_sales.product_key → gold.dim_products.product_key
+gold.fact_sales.customer_key → gold.dim_customers.customer_key
